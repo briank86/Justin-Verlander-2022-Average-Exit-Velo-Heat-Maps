@@ -1,0 +1,1 @@
+# Justin-Verlander-2022-Average-Exit-Velo-Heat-Maps
