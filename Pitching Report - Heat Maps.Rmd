@@ -1,0 +1,936 @@
+---
+title: "2022 Average Exit Velocity Heat Maps - Justin Verlander"
+output:
+  pdf_document:
+    toc: true
+---
+\newpage
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(baseballr)
+library(grid)
+library(gridExtra)
+
+
+season1 <- baseballr::statcast_search(start_date = '2022-04-09', end_date = '2022-04-09')
+season2 <- baseballr::statcast_search(start_date = '2022-04-16', end_date = '2022-04-16')
+season3 <- baseballr::statcast_search(start_date = '2022-04-22', end_date = '2022-04-22')
+season4 <- baseballr::statcast_search(start_date = '2022-04-28', end_date = '2022-04-28')
+season5 <- baseballr::statcast_search(start_date = '2022-05-04', end_date = '2022-05-04')
+season6 <- baseballr::statcast_search(start_date = '2022-05-10', end_date = '2022-05-10')
+season7 <- baseballr::statcast_search(start_date = '2022-05-15', end_date = '2022-05-15')
+season8 <- baseballr::statcast_search(start_date = '2022-05-21', end_date = '2022-05-21')
+season9 <- baseballr::statcast_search(start_date = '2022-05-27', end_date = '2022-05-27')
+season10 <- baseballr::statcast_search(start_date = '2022-06-01', end_date = '2022-06-01')
+season11 <- baseballr::statcast_search(start_date = '2022-06-07', end_date = '2022-06-07')
+season12 <- baseballr::statcast_search(start_date = '2022-06-12', end_date = '2022-06-12')
+season13 <- baseballr::statcast_search(start_date = '2022-06-18', end_date = '2022-06-18')
+season14 <- baseballr::statcast_search(start_date = '2022-06-24', end_date = '2022-06-24')
+season15 <- baseballr::statcast_search(start_date = '2022-06-29', end_date = '2022-06-29')
+season16 <- baseballr::statcast_search(start_date = '2022-07-07', end_date = '2022-07-07')
+season17 <- baseballr::statcast_search(start_date = '2022-07-16', end_date = '2022-07-16')
+season18 <- baseballr::statcast_search(start_date = '2022-07-23', end_date = '2022-07-23')
+season19 <- baseballr::statcast_search(start_date = '2022-07-29', end_date = '2022-07-29')
+season20 <- baseballr::statcast_search(start_date = '2022-08-04', end_date = '2022-08-04')
+season21 <- baseballr::statcast_search(start_date = '2022-08-10', end_date = '2022-08-10')
+season22 <- baseballr::statcast_search(start_date = '2022-08-16', end_date = '2022-08-16')
+season23 <- baseballr::statcast_search(start_date = '2022-08-23', end_date = '2022-08-23')
+season24 <- baseballr::statcast_search(start_date = '2022-08-28', end_date = '2022-08-28')
+season25 <- baseballr::statcast_search(start_date = '2022-09-16', end_date = '2022-09-16')
+season26 <- baseballr::statcast_search(start_date = '2022-09-22', end_date = '2022-09-22')
+season27 <- baseballr::statcast_search(start_date = '2022-09-28', end_date = '2022-09-28')
+season28 <- baseballr::statcast_search(start_date = '2022-10-04', end_date = '2022-10-04')
+season29 <- baseballr::statcast_search(start_date = '2022-10-11', end_date = '2022-10-11')
+season30 <- baseballr::statcast_search(start_date = '2022-10-19', end_date = '2022-10-19')
+season31 <- baseballr::statcast_search(start_date = '2022-10-28', end_date = '2022-10-28')
+season32 <- baseballr::statcast_search(start_date = '2022-11-03', end_date = '2022-11-03')
+
+
+season <- rbind(season1, season2, season3, season4, season5, season6, season7, season8, season9, season10, season11, season12, season13, season14, season15, season16, season17, season18, season19, season20, season21, season22, season23, season24, season25, season26, season27, season28, season29, season30, season31, season32)
+
+season <- data.frame(season, stringsAsFactors = F)  %>% filter(pitcher == 434378)
+
+season$pitcher[season$pitcher == '434378'] <- 'Justin Verlander'
+
+season$game_date <- as.Date(season$game_date, "%Y-%m-%d")
+season$pitch_type <- factor(season$pitch_type, levels = c("FF", "SI", "FC", "CS", "CU", "KC", "SL", "CH", "FS"))
+season$pitch_name <- factor(season$pitch_name, levels = c("4-Seam Fastball", "Sinker", "Cutter", "Curveball", "Knuckle Curve", "Slider", "Changeup", "Split-Finger"))
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Heat map function 
+Heatmap_zone <- function(data, title) {
+  require(ggplot2)
+  require(dplyr)
+  require(knitr)
+
+# Right <- data %>% filter(stand == stands, balls == ball, strikes == strike, pitch_type == type, launch_speed != 'NA') 
+# print(Right) - couldn't get it to work
+
+#top left
+num1 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num1 = 0
+  } else{
+  if(data$plate_x[i] < -0.277 & data$plate_z[i] > 2.83) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num1 <- num1 + 1
+  }
+  }
+}
+
+if (num1 == 0) {
+  Velo1 = NA
+} else {
+  Velo1 <- totVelo/num1
+}
+
+#top middle
+num2 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) {  
+  if(nrow(data) == 0)
+  {
+    num2 = 0
+  } else{
+  if(data$plate_x[i] > -0.277 & data$plate_x[i] < 0.277 & data$plate_z[i] > 2.83) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num2 <- num2 + 1
+  }
+  }
+}
+
+if (num2 == 0) {
+  Velo2 = NA
+} else {
+  Velo2 <- totVelo/num2
+}
+
+#top data
+num3 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) {  
+  if(nrow(data) == 0)
+  {
+    num3 = 0
+  } else{
+  if(data$plate_x[i] > 0.277 & data$plate_z[i] > 2.83) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num3 <- num3 + 1
+  }
+  }
+}
+
+if (num3 == 0) {
+  Velo3 = NA
+} else {
+  Velo3 <- totVelo/num3
+}
+
+#middle left
+num4 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num4 = 0
+  } else{
+  if(data$plate_x[i] < -0.277 & data$plate_z[i] < 2.83 & data$plate_z[i] > 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num4 <- num4 + 1
+  }
+  }
+}
+
+if (num4 == 0) {
+  Velo4 = NA
+} else {
+  Velo4 <- totVelo/num4
+}
+
+#middle middle
+num5 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num5 = 0
+  } else{
+  if(data$plate_x[i] > -0.277 & data$plate_x[i] < 0.277 & data$plate_z[i] < 2.83 & data$plate_z[i] > 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num5 <- num5 + 1
+  }
+  }
+}
+
+if (num5 == 0) {
+  Velo5 = NA
+} else {
+  Velo5 <- totVelo/num5
+}
+
+#middle data
+num6 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num6 = 0
+  } else{
+  if(data$plate_x[i] > 0.277 & data$plate_z[i] < 2.83 & data$plate_z[i] > 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num6 <- num6 + 1
+  }
+  }
+}
+
+if (num6 == 0) {
+  Velo6 = NA
+} else {
+  Velo6 <- totVelo/num6
+}
+
+#bottom left
+num7 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num7 = 0
+  } else{
+  if(data$plate_x[i] < -0.277 & data$plate_z[i] < 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num7 <- num7 + 1 
+  }
+  }
+}
+
+if (num7 == 0) {
+  Velo7 = NA
+} else {
+  Velo7 <- totVelo/num7
+}
+
+#bottom middle
+num8 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) {
+  if(nrow(data) == 0)
+  {
+    num8 = 0
+  } else{
+  if(data$plate_x[i] > -0.277 & data$plate_x[i] < 0.277 & data$plate_z[i] < 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num8 <- num8 + 1
+  }
+  }
+}
+
+if (num8 == 0) {
+  Velo8 = NA
+} else {
+  Velo8 <- totVelo/num8
+}
+
+#bottom data
+num9 <- 0
+totVelo <- 0
+
+for(i in 1:length(data[,'pitch_type'])) { 
+  if(nrow(data) == 0)
+  {
+    num9 = 0
+  } else{
+  if(data$plate_x[i] > 0.277 & data$plate_z[i] < 2.167) {
+    velo <- data$launch_speed[i]
+    totVelo <- totVelo + velo
+    num9 <- num9 + 1
+  }
+  }
+}
+
+if (num9 == 0) {
+  Velo9 = NA
+} else {
+  Velo9 <- totVelo/num9
+}
+
+
+strike_zone <- data.frame(
+  x1 = c(-0.83, -0.83, -0.83, -0.277, -0.277, -0.277, 0.277, 0.277, 0.277),
+  x2 = c(-0.277, -0.277, -0.277, 0.277, 0.277, 0.277, 0.83, 0.83, 0.83),
+  y1 = c(1.5, 2.167, 2.83, 1.5, 2.167, 2.83, 1.5, 2.167, 2.83),
+  y2 = c(2.167, 2.83, 3.5, 2.167, 2.83, 3.5, 2.167, 2.83, 3.5),
+  z = c(Velo7,Velo4,Velo1,Velo8,Velo5,Velo2,Velo9,Velo6,Velo3)
+  
+)
+
+ggplot() + 
+  xlim(-0.83, 0.83)+ xlab('') +
+  ylim(1.5, 3.5) + ylab('') +
+  geom_rect(data = strike_zone,
+            aes(xmin = x1, xmax = x2, ymin = y2, ymax = y1, fill = z), color = 'grey20') + 
+  geom_text(data = strike_zone, label = round(Velo1,2), x = -0.55, y=3.25, size=8) +
+  geom_text(data = strike_zone, label = paste(num1, 'N'), x = -0.55, y=3.0, size=6) +
+  geom_text(data = strike_zone, label = round(Velo2,2), x = 0, y=3.25, size=8) +
+  geom_text(data = strike_zone, label = paste(num2, 'N'), x = 0, y=3.0, size=6) +
+  geom_text(data = strike_zone, label = round(Velo3,2), x = 0.55, y=3.25, size=8) +
+  geom_text(data = strike_zone, label = paste(num3, 'N'), x = 0.55, y=3.0, size=6) +
+  geom_text(data = strike_zone, label = round(Velo4,2), x = -0.55, y=2.55, size=8) +
+  geom_text(data = strike_zone, label = paste(num4, 'N'), x = -0.55, y=2.30, size=6) +
+  geom_text(data = strike_zone, label = round(Velo5,2), x = 0, y=2.55, size=8) +
+  geom_text(data = strike_zone, label = paste(num5, 'N'), x = 0, y=2.30, size=6) +
+  geom_text(data = strike_zone, label = round(Velo6,2), x = 0.55, y=2.55, size=8) +
+  geom_text(data = strike_zone, label = paste(num6, 'N'), x = 0.55, y=2.30, size=6) +
+  geom_text(data = strike_zone, label = round(Velo7,2), x = -0.55, y=1.90, size=8) +
+  geom_text(data = strike_zone, label = paste(num7, 'N'), x = -0.55, y=1.65, size=6) +
+  geom_text(data = strike_zone, label = round(Velo8,2), x = 0, y=1.90, size=8) +
+  geom_text(data = strike_zone, label = paste(num8, 'N'), x = 0, y=1.65, size=6) +
+  geom_text(data = strike_zone, label = round(Velo9,2), x = 0.55, y=1.90, size=8) +
+  geom_text(data = strike_zone, label = paste(num9, 'N'), x = 0.55, y=1.65, size=6) +
+  labs(x = "Pitch Offset (ft.)", y = "Pitch Height (ft.)", color = " ", title = title, fill='Average Exit Velo') + theme(plot.title = element_text(size = 22)) + theme(legend.text = element_text(size = 15)) + theme(axis.title = element_text(size = 18)) +
+  scale_fill_distiller(palette = "Spectral")
+  # scale_fill_gradient(low = "deepskyblue",
+  #                     high = "firebrick3",
+  #                     guide = "colorbar")
+}
+
+```
+
+
+Fastballs
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '1', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '2', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '3', strikes == '2', pitch_type == 'FF', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter( balls == '1', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '2', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '3', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '2', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right5 <- season %>% filter( balls == '3', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '0', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '1', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+RHH - Fastballs
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '1', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '2', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '3', strikes == '2', pitch_type == 'FF', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '1', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '2', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '3', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '2', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'R', balls == '3', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '0', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '1', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+LHH - Fastballs
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '1', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '2', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '3', strikes == '2', pitch_type == 'FF', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '1', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '2', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '3', strikes == '0', pitch_type == 'FF', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '2', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'L', balls == '3', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '1', pitch_type == 'FF', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '0', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '1', strikes == '2', pitch_type == 'FF', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+
+
+
+Slider
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '1', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '2', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '3', strikes == '2', pitch_type == 'SL', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter( balls == '1', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '2', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '3', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '2', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right5 <- season %>% filter( balls == '3', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '0', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '1', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+RHH - Slider
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '1', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '2', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '3', strikes == '2', pitch_type == 'SL', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '1', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '2', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '3', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '2', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'R', balls == '3', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '0', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '1', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+LHH - Slider
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '1', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '2', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '3', strikes == '2', pitch_type == 'SL', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '1', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '2', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '3', strikes == '0', pitch_type == 'SL', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '2', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'L', balls == '3', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '1', pitch_type == 'SL', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '0', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '1', strikes == '2', pitch_type == 'SL', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+
+
+Curveball
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '1', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '2', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '3', strikes == '2', pitch_type == 'CU', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter( balls == '1', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '2', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '3', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '2', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right5 <- season %>% filter( balls == '3', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '0', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '1', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+RHH - Curveball
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '1', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '2', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '3', strikes == '2', pitch_type == 'CU', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '1', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '2', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '3', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'R', balls == '2', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'R', balls == '3', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'R', balls == '0', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'R', balls == '1', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+LHH - Curveball
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA') 
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '1', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '2', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '3', strikes == '2', pitch_type == 'CU', launch_speed != 'NA') 
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '1', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '2', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '3', strikes == '0', pitch_type == 'CU', launch_speed != 'NA')
+
+Right4 <- season %>% filter(stand == 'L', balls == '2', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right5 <- season %>% filter(stand == 'L', balls == '3', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '1', pitch_type == 'CU', launch_speed != 'NA')
+
+Right2 <- season %>% filter(stand == 'L', balls == '0', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right3 <- season %>% filter(stand == 'L', balls == '1', strikes == '2', pitch_type == 'CU', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+
+
+
+Changeup
+---
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+Right <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+p1 <- Heatmap_zone(Right, "0-0")
+
+#RHH, Even in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '1', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '2', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '3', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4)
+
+p2 <- Heatmap_zone(Right, "Even Count")
+
+#RHH, behind in the count, Fastballs
+Right1 <- season %>% filter( balls == '1', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '2', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '3', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+
+Right4 <- season %>% filter( balls == '2', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+
+Right5 <- season %>% filter( balls == '3', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+
+p3<- Heatmap_zone(Right, "Behind")
+
+#RHH, ahead in the count, Fastballs
+Right1 <- season %>% filter( balls == '0', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+
+Right2 <- season %>% filter( balls == '0', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+
+Right3 <- season %>% filter( balls == '1', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+
+Right <- rbind(Right1, Right2, Right3)
+
+p4 <- Heatmap_zone(Right, "Ahead")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+# Right <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# p1 <- Heatmap_zone(Right, "0-0")
+# 
+# #RHH, Even in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'R', balls == '1', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'R', balls == '2', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right4 <- season %>% filter(stand == 'R', balls == '3', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3, Right4)
+# 
+# p2 <- Heatmap_zone(Right, "Even Count")
+# 
+# #RHH, behind in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'R', balls == '1', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'R', balls == '2', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'R', balls == '3', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right4 <- season %>% filter(stand == 'R', balls == '2', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right5 <- season %>% filter(stand == 'R', balls == '3', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+# 
+# p3<- Heatmap_zone(Right, "Behind")
+# 
+# #RHH, ahead in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'R', balls == '0', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'R', balls == '0', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'R', balls == '1', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3)
+# 
+# p4 <- Heatmap_zone(Right, "Ahead")
+# 
+# grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+
+```{r, echo=FALSE, warning=FALSE,  fig.dim = c(12, 10), message=FALSE}
+#RHH, 0-0, Fastballs
+#dim = c(10, 10) - for it to be longer
+# Right <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# p1 <- Heatmap_zone(Right, "0-0")
+# 
+# #RHH, Even in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'L', balls == '1', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'L', balls == '2', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right4 <- season %>% filter(stand == 'L', balls == '3', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3, Right4)
+# 
+# p2 <- Heatmap_zone(Right, "Even Count")
+# 
+# #RHH, behind in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'L', balls == '1', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'L', balls == '2', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'L', balls == '3', strikes == '0', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right4 <- season %>% filter(stand == 'L', balls == '2', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right5 <- season %>% filter(stand == 'L', balls == '3', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3, Right4, Right5)
+# 
+# p3<- Heatmap_zone(Right, "Behind")
+# 
+# #RHH, ahead in the count, Fastballs
+# Right1 <- season %>% filter(stand == 'L', balls == '0', strikes == '1', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right2 <- season %>% filter(stand == 'L', balls == '0', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right3 <- season %>% filter(stand == 'L', balls == '1', strikes == '2', pitch_type == 'CH', launch_speed != 'NA')
+# 
+# Right <- rbind(Right1, Right2, Right3)
+# 
+# p4 <- Heatmap_zone(Right, "Ahead")
+# 
+# grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
